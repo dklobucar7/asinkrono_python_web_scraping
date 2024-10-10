@@ -56,31 +56,28 @@ class BooksToScrape:
         return {"title": title, "price": price, "stock": stock, "rating": rating}
 
     # -----------------------------------------------------------------------------------------------------
-    # OVO TREBA BITI U MAIN-u po meni jer ovo orkestira cijeli proces
 
+    # Orkestira cijeli proces
     async def run(self):
         url = "https://books.toscrape.com/"
         async with aiohttp.ClientSession() as session:
+            # pokupimo BS objekt za taj HTML
             first_page_soup = await self.fetch_page(session, 1)
-            current_page_info = first_page_soup.soup.find("li", {"class": "current"})
 
-    # def get_total_pages(self, soup):
-    #     current_page_info = soup.find("li", {"class": "current"})
-    #     if current_page_info:
-    #         total_pages = int(current_page_info.text.strip().split(" ")[-1])
-    #         return total_pages
-    #     else:
-    #         return 1
+            # Gledamo koliko ukupno ima stranica pretrage
+            current_page_info = first_page_soup.find("li", {"class": "current"})
+            total_pages = int(current_page_info.text.strip().split(" ")[-1])
 
-    def parse(self, total_pages):
-        # Parse all the pages
-        for page_num in range(1, total_pages + 1):
-            doc = self.fetch_page(page_num)
-            list_items = doc.find_all(
-                "li", {"class": "col-xs-6 col-sm-4 col-md-3 col-lg-3"}
-            )
+            # Preuzimamo sve stranice paralelno
+            pages = await self.fetch_all_pages(session, total_pages)
 
-            for item in list_items:
-                self.results.append(self.extract_book_info(item))
+            # Parsiramo sve stranice
+            for doc in pages:
+                list_items = doc.find_all(
+                    "li", {"class": "col-xs-6 col-sm-4 col-md-3 col-lg-3"}
+                )
+                for item in list_items:
+                    self.results.append(self.extract_book_info(item))
 
-        return self.results
+            # Ispisujemo rezultate
+            print(self.results)

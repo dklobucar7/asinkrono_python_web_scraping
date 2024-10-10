@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
-import requests
 from BooksToScrape import BooksToScrape
 import time
 import asyncio
 
+if __name__ == "__main__" and hasattr(asyncio, "WindowsSelectorEventLoopPolicy"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if __name__ == "__main__":
     # Start time
